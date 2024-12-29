@@ -9,7 +9,6 @@ const {
   clearCart
 } = require("../controller/cartController");
 
-
 router.post("/add", authenticateToken, addToCart);
 router.get("/:user_id", getCartByUser);
 router.patch("/update/:id", updateCartItem);

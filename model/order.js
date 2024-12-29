@@ -3,13 +3,19 @@ const mongoose = require("mongoose");
 const orderSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer", // Reference to the user
+    ref: "customers",
+    required: true,
+  },
+  orderType: {
+    type: String,
+    enum: ["Purchase", "Rent"],
     required: true,
   },
   items: [
     {
       book_id: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
       quantity: { type: Number, required: true, min: 1 },
+      rentDuration: { type: Number, default: 0 },
     },
   ],
   total_price: {

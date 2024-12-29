@@ -5,7 +5,6 @@ const { deleteUser } = require("../controller/authController");
 const CustomerValidation = require("../validation/customerValidation");
 const { authenticateToken } = require("../security/authorization");
 
-
 router.get("/", authenticateToken, findAll);
 router.post("/", CustomerValidation, save);
 router.get("/:id", findById);

@@ -35,7 +35,6 @@ const upload = multer({
     },
   });
 
-
 router.get("/", getAllBooks);
 router.get("/:id", getBookById);
 router.post("/", authenticateToken, authorizeRole("Admin"), upload.single('file'), addBook);

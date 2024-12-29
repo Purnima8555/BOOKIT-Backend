@@ -4,14 +4,14 @@ const passwordResetSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: "Customer" // Reference to the Customer collection
+        ref: "Customer"
     },
     email: {
         type: String,
         required: true
     },
     code: {
-        type: String, // Store the 6-digit verification code as a string
+        type: String,
         required: true
     },
     expiresAt: {
