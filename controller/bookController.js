@@ -2,16 +2,15 @@ const Book = require("../model/book");
 
 // Get all books
 const getAllBooks = async (req, res) => {
-    try {
-        const books = await Book.find();
-        console.log("Books retrieved:", books);
-        res.status(200).json(books);
-    } catch (err) {
-        console.error("Error fetching books:", err);
-        res.status(500).json({ message: "Error fetching books", error: err });
-    }
+  try {
+    const books = await Book.find();
+    console.log("Books retrieved:", books);
+    res.status(200).json(books);
+  } catch (err) {
+    console.error("Error fetching books:", err);
+    res.status(500).json({ message: "Error fetching books", error: err });
+  }
 };
-
 
 // Get a specific book by ID
 const getBookById = async (req, res) => {
@@ -28,7 +27,7 @@ const getBookById = async (req, res) => {
 
 // Add a new book (Admin only)
 const addBook = async (req, res) => {
-  const { title, author, genre, price, rental_price, publisher, ISBN, description } = req.body;
+  const { title, author, genre, price, rental_price, publisher, ISBN, description, available_stock, series } = req.body;
 
   try {
     if (!req.file) {
@@ -45,6 +44,8 @@ const addBook = async (req, res) => {
       publisher,
       ISBN,
       description,
+      available_stock,
+      series,
     });
     await newBook.save();
     res.status(201).json(newBook);
@@ -54,9 +55,6 @@ const addBook = async (req, res) => {
 };
 
 // Update a book by ID (Admin only)
-const fs = require('fs');
-const path = require('path');
-
 const updateBook = async (req, res) => {
   try {
     const { id } = req.params;
@@ -76,6 +74,10 @@ const updateBook = async (req, res) => {
     if (req.body.publisher) updatedFields.publisher = req.body.publisher;
     if (req.body.ISBN) updatedFields.ISBN = req.body.ISBN;
     if (req.body.description) updatedFields.description = req.body.description;
+    if (req.body.available_stock) updatedFields.available_stock = req.body.available_stock;
+
+    // If the series is provided, update it, otherwise retain default
+    if (req.body.series) updatedFields.series = req.body.series;
 
     if (req.file) {
       const uniqueTimestamp = Date.now();
@@ -89,8 +91,6 @@ const updateBook = async (req, res) => {
 
       // Delete the old image if it exists
       const oldImagePath = path.join(__dirname, '..', 'book_images', currentBook.image);
-
-      // Check if the old image exists and delete it
       fs.exists(oldImagePath, (exists) => {
         if (exists) {
           fs.unlink(oldImagePath, (err) => {
@@ -123,38 +123,38 @@ const updateBook = async (req, res) => {
 
 // Delete a book by ID (Admin only)
 const deleteBook = async (req, res) => {
-    try {
-      const deletedBook = await Book.findById(req.params.id);
-  
-      if (!deletedBook) {
-        return res.status(404).json({ message: "Book not found" });
-      }
-  
-     // Delete the image from the book_images folder if it exists
-      const imagePath = path.join(__dirname, '..', 'book_images', deletedBook.image);
-  
-      // Check if the image exists and delete it
-      fs.exists(imagePath, (exists) => {
-        if (exists) {
-          fs.unlink(imagePath, (err) => {
-            if (err) {
-              console.error("Error deleting the image:", err);
-            } else {
-              console.log("Image deleted successfully");
-            }
-          });
-        } else {
-          console.log("Image not found, skipping deletion.");
-        }
-      });
-      await Book.findByIdAndDelete(req.params.id);
-      res.status(200).json({ message: "Book deleted successfully" });
-    } catch (err) {
-      console.error("Error deleting book:", err);
-      res.status(500).json({ message: "Error deleting book", error: err });
-    }
-  };
+  try {
+    const deletedBook = await Book.findById(req.params.id);
 
+    if (!deletedBook) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    // Delete the image from the book_images folder if it exists
+    const imagePath = path.join(__dirname, '..', 'book_images', deletedBook.image);
+
+    // Check if the image exists and delete it
+    fs.exists(imagePath, (exists) => {
+      if (exists) {
+        fs.unlink(imagePath, (err) => {
+          if (err) {
+            console.error("Error deleting the image:", err);
+          } else {
+            console.log("Image deleted successfully");
+          }
+        });
+      } else {
+        console.log("Image not found, skipping deletion.");
+      }
+    });
+
+    await Book.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Book deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting book:", err);
+    res.status(500).json({ message: "Error deleting book", error: err });
+  }
+};
 
 module.exports = {
   getAllBooks,

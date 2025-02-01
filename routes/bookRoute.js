@@ -8,6 +8,7 @@ const {
   updateBook,
   deleteBook,
 } = require("../controller/bookController");
+
 const { authenticateToken, authorizeRole } = require("../security/authorization");
 
 const multer = require("multer");
@@ -28,12 +29,12 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-    storage,
-    fileFilter: (req, file, cb) => {
-      console.log('File received:', file);
-      cb(null, true);
-    },
-  });
+  storage,
+  fileFilter: (req, file, cb) => {
+    console.log('File received:', file);
+    cb(null, true);
+  },
+});
 
 router.get("/", getAllBooks);
 router.get("/:id", getBookById);

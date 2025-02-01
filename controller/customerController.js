@@ -11,15 +11,27 @@ const findAll = async (req,res) => {
     }
 }
 
-const save = async (req,res) => {
+const save = async (req, res) => {
     try {
-        const customer = new Customer(req.body);
-    customer.save();
-    res.status(201).json(customer)
+        const { username, full_name, email, contact_no, address, role, image } = req.body;
+
+        // Create new customer with default role "User" if not provided
+        const customer = new Customer({
+            username,
+            full_name,
+            email,
+            contact_no,
+            address,
+            role: role || "User",  // Default to 'User' if not provided
+            image: image || null   // Default to null if image not provided
+        });
+
+        await customer.save();
+        res.status(201).json(customer);
     } catch (e) {
-        res.json(e)
+        res.status(500).json({ message: "Error saving customer", error: e });
     }
-}
+};
 
 const findById = async (req,res) => {
     try {
@@ -41,8 +53,18 @@ const deleteById = async (req,res) => {
 
 const update = async (req, res) => {
     try {
-        // Update the customer's details and return the updated customer document
-        const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const { role, image, ...otherUpdates } = req.body;
+
+        // Find and update customer, ensuring role and image are handled properly
+        const customer = await Customer.findByIdAndUpdate(
+            req.params.id,
+            {
+                ...otherUpdates,
+                role: role || "User", // Ensure role defaults to 'User' if not provided
+                image: image || null  // Ensure image is handled properly
+            },
+            { new: true }
+        );
 
         if (!customer) {
             return res.status(404).json({ message: "Customer not found" });
@@ -59,7 +81,7 @@ const update = async (req, res) => {
             return res.status(404).json({ message: "Credential not found for this customer" });
         }
 
-        // Set up nodemailer transporter
+        // Send email notification (unchanged)
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 587,
@@ -70,7 +92,6 @@ const update = async (req, res) => {
             }
         });
 
-        // Send an email notification to the customer about the update
         const info = await transporter.sendMail({
             from: "rpurnima8555@gmail.com",
             to: customer.email,
@@ -84,12 +105,12 @@ const update = async (req, res) => {
                     <li><strong>Email:</strong> ${customer.email}</li>
                     <li><strong>Contact Number:</strong> ${customer.contact_no}</li>
                     <li><strong>Address:</strong> ${customer.address}</li>
+                    <li><strong>Role:</strong> ${customer.role}</li>
                 </ul>
                 <p>If you did not request these changes, please contact our support team immediately.</p>
             `
         });
 
-        // Respond with the updated customer details and email info
         res.status(200).json({ message: "Customer details updated successfully", customer, cred, emailInfo: info });
     } catch (e) {
         console.error("Error updating customer:", e);

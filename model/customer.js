@@ -19,11 +19,16 @@ const customerSchema = new mongoose.Schema({
     },
     role: {
         type: String,
+        default: "User",
         required: true
     },
     address: {
         type: String
     },
+    image: {
+        type: String,
+        default: null
+    }
 });
 
 const Customer = mongoose.model('customers', customerSchema);

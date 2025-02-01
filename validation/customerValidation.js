@@ -1,21 +1,27 @@
-const joi = require("joi");
+const Joi = require("joi");
 
-const customerSchema = joi.object({
-    full_name: joi.string().required(),
-    email: joi.string().required().email(),
-    contact_no: joi.string().required(),
-    address: joi.string().optional(),
-    username: joi.string().required(),
-    password: joi.string().required(),
-    confirmPassword: joi.string().valid(joi.ref('password')).required(),
-    role: joi.string().required(),
+const customerSchema = Joi.object({
+    full_name: Joi.string().required(),
+    email: Joi.string().required().email(),
+    contact_no: Joi.string().required(),
+    address: Joi.string().allow("", null).optional(),
+    username: Joi.string().required(),
+    password: Joi.string().required(),
+    confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
+    role: Joi.string().valid("User", "Admin").default("User"), // Default role
+    image: Joi.string().allow("", null).optional(), // Allow optional image
 });
 
 function CustomerValidation(req, res, next) {
-    const { error } = customerSchema.validate(req.body);
+    const { error, value } = customerSchema.validate(req.body, { abortEarly: false });
+
     if (error) {
-        return res.status(400).json(error.details[0].message);
+        return res.status(400).json({ message: error.details.map((err) => err.message) });
     }
+
+    // Ensure role defaults to "User" if not provided
+    req.body = value; 
+
     next();
 }
 
