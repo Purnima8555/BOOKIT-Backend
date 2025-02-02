@@ -15,6 +15,7 @@ connectDb();
 
 app.use(express.json());
 app.use("/book_images", express.static(path.join(__dirname, "book_images")));
+// app.use('/profilePicture', express.static(path.join(__dirname, 'public', 'profilePicture')));
 
 app.use("/api/customer", CustomerRouter);
 app.use("/api/auth", AuthRouter);
@@ -23,6 +24,7 @@ app.use("/api/feedback", feedbackRouter);
 app.use("/api/favorites", favoriteRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
+app.use("/profilePicture", express.static("public/profilePicture"));
 
 
 const port = 3000;
