@@ -15,15 +15,16 @@ const save = async (req, res) => {
     try {
         const { username, full_name, email, contact_no, address, role, image } = req.body;
 
-        // Create new customer with default role "User" if not provided
+        const imagePath = req.file.filename; // Store only filename, not full path
+
         const customer = new Customer({
-            username,
-            full_name,
-            email,
-            contact_no,
-            address,
-            role: role || "User",  // Default to 'User' if not provided
-            image: image || null   // Default to null if image not provided
+            username: req.body.username,
+            full_name: req.body.full_name,
+            email: req.body.email,
+            contact_no: req.body.contact_no,
+            role: req.body.role,
+            address: req.body.address,
+            image: imagePath // Save image in DB
         });
 
         await customer.save();
