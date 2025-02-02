@@ -4,20 +4,21 @@ const Credential = require("../model/credential");
 const Customer = require("../model/customer");
 const nodemailer = require("nodemailer");
 const PasswordReset = require('../model/passwordReset');
+const upload = require("../middleware/uploads");
 
 const SECRET_KEY = "21e6fb393716f568bf5ab155f62379812ac5b048efdea976aa1b1699f9e7e7dd";
 
 const register = async (req, res) => {
-    const { username, password, confirmPassword, role, full_name, email, contact_no, address } = req.body;
+    const { username, password, confirmPassword, role, full_name, email, contact_no, address, image } = req.body;
 
     try {
         if (password !== confirmPassword) {
-            return res.status(400).send("Passwords do not match");
+            return res.status(400).json({ message: "Passwords do not match" });
         }
 
         const existingUser = await Credential.findOne({ username });
         if (existingUser) {
-            return res.status(400).send("Username already exists");
+            return res.status(400).json({ message: "Username already exists" });
         }
 
         // Generate a hashed password
@@ -27,7 +28,7 @@ const register = async (req, res) => {
         const cred = new Credential({ username, password: hashedPassword, role });
         await cred.save();
 
-        // Use the same _id from Credential for Customer
+        // Create the Customer document with the same _id
         const customer = new Customer({
             _id: cred._id,
             username,
@@ -35,8 +36,10 @@ const register = async (req, res) => {
             email,
             contact_no,
             role,
-            address
+            address,
+            image, // Just adding the image field as requested
         });
+
         await customer.save();
 
         // Set up nodemailer transporter for sending confirmation email
@@ -46,8 +49,8 @@ const register = async (req, res) => {
             secure: false,
             auth: {
                 user: "rpurnima8555@gmail.com",
-                pass: "kwvuyzwguvdohwzu"
-            }
+                pass: "kwvuyzwguvdohwzu",
+            },
         });
 
         // Send email to the customer
@@ -64,7 +67,7 @@ const register = async (req, res) => {
                     <li><strong>Contact No:</strong> ${customer.contact_no}</li>
                 </ul>
                 <p>Thank you for joining us!</p>
-            `
+            `,
         });
 
         res.status(201).json({ message: "User registered successfully", customer, emailInfo: info });
@@ -109,6 +112,36 @@ const login = async (req, res) => {
     }
 };
 
+const asyncHandler = require("../middleware/async");
+
+const uploadImage = asyncHandler(async (req, res) => {
+    // Check what is in the request body and file
+    console.log("Request Body:", req.body);  // This will show any extra data
+    console.log("File:", req.file);  // This will show the file object
+
+    if (!req.file) {
+        console.log("No file uploaded or file not processed by multer");
+        return res.status(400).json({ message: "No file uploaded or file format not supported" });
+    }
+
+    upload(req, res, (err) => {
+        if (err) {
+            console.log("Error during upload:", err.message);
+            return res.status(400).json({ message: "Image upload failed", error: err.message });
+        }
+
+        if (!req.file) {
+            console.log("No file uploaded");
+            return res.status(400).json({ message: "Please upload a file" });
+        }
+
+        console.log("Uploaded file:", req.file);
+        res.status(200).json({
+            success: true,
+            data: req.file.filename,
+        });
+    });
+});
 
 const deleteUser = async (req, res) => {
     const { id } = req.params;
@@ -276,4 +309,4 @@ const verifyCode = async (req, res) => {
 
 
 
-module.exports = { register, login, deleteUser, forgotPassword, resetPassword, verifyCode };
+module.exports = { register, login, deleteUser, forgotPassword, resetPassword, verifyCode, uploadImage };
