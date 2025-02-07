@@ -5,7 +5,10 @@ const bookSchema = new mongoose.Schema(
     series: {
       type: String,
       default: function () {
-        return this.title;
+      return this.title || "";
+      },
+      set: function (val) {
+      return val && val.trim() !== "" ? val : this.title;
       },
     },
     title: {
@@ -21,7 +24,7 @@ const bookSchema = new mongoose.Schema(
       required: true,
     },
     genre: {
-      type: String,
+      type: [],
       required: true,
     },
     price: {
@@ -29,8 +32,7 @@ const bookSchema = new mongoose.Schema(
       required: true,
     },
     availability_status: {
-      type: Boolean,
-      default: true,
+      type: String,
     },
     rental_price: {
       type: Number,
@@ -55,31 +57,36 @@ const bookSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    hasDiscount: {
+      type: Boolean,
+      default: false,
+    },
+    discount_type: {
+      type: String,
+    },
+    discount_percent: {
+      type: Number,
+    },
+    discount_start: {
+      type: Date,
+    },
+    discount_end: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
 
 // Middleware to update availability_status based on available_stock
 bookSchema.pre("save", function (next) {
-  if (this.available_stock === 0) {
-    this.availability_status = false;
-  } else {
-    this.availability_status = true;
-  }
+  this.availability_status = this.available_stock > 0 ? 'yes' : 'no'; // Set availability to 'yes' or 'no'
   next();
 });
 
-// Middleware to handle updates
 bookSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate();
-
-  // If available_stock is being updated, check its value
   if (update.available_stock !== undefined) {
-    if (update.available_stock === 0) {
-      this.set({ availability_status: false });
-    } else {
-      this.set({ availability_status: true });
-    }
+    this.set({ availability_status: update.available_stock > 0 ? 'yes' : 'no' });
   }
   next();
 });
