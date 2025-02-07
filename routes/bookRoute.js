@@ -6,6 +6,9 @@ const {
   getBookById,
   addBook,
   updateBook,
+  getByGenre,
+  getNewBooks,
+  getBestBooks,
   deleteBook,
 } = require("../controller/bookController");
 
@@ -31,15 +34,28 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    console.log('File received:', file);
-    cb(null, true);
+    // Define allowed file types
+    const allowedTypes = /jpeg|jpg|png/;
+    
+    // Check if the file type matches the allowed types
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (extname && mimetype) {
+      return cb(null, true); // Accept the file
+    } else {
+      cb(new Error('Invalid file type. Only JPG, JPEG, and PNG are allowed.'), false); // Reject the file
+    }
   },
 });
 
 router.get("/", getAllBooks);
 router.get("/:id", getBookById);
-router.post("/", authenticateToken, authorizeRole("Admin"), upload.single('file'), addBook);
-router.put("/:id", authenticateToken, authorizeRole("Admin"), upload.single('file'), updateBook);
+router.get("/genre/:genre", getByGenre);
+router.get("/new/newbooks", getNewBooks);
+router.get("/best/bestbooks", getBestBooks);
+router.post("/", upload.single('file'), addBook);
+router.put("/:id", upload.single('file'), updateBook);
 router.delete("/:id", authorizeRole("Admin"), deleteBook);
 
 module.exports = router;
