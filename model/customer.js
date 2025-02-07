@@ -23,7 +23,8 @@ const customerSchema = new mongoose.Schema({
         required: true
     },
     address: {
-        type: String
+        type: String,
+        default: null
     },
     image: {
         type: String,
