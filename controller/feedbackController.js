@@ -35,7 +35,7 @@ const addFeedback = async (req, res) => {
 const getAllFeedback = async (req, res) => {
   try {
     const feedbackList = await Feedback.find()
-      .populate("user_id", "full_name")
+      .populate("user_id", "username")
       .populate("book_id", "title")
       .sort({ date: -1 });
 
@@ -52,7 +52,7 @@ const getFeedbackByBookId = async (req, res) => {
     const { book_id } = req.params;
 
     const feedbackList = await Feedback.find({ book_id })
-      .populate("user_id", "full_name")  // Changed to `full_name`
+      .populate("user_id", "username , image")
       .sort({ date: -1 });
 
     if (!feedbackList || feedbackList.length === 0) {
