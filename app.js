@@ -12,6 +12,13 @@ const orderRouter = require("./routes/orderRoute");
 const app = express();
 
 connectDb();
+const cors = require('cors');
+
+app.use(cors({
+    origin: 'http://localhost:5173', // Allow frontend to access the backend
+    methods: 'GET,POST,PUT,DELETE', // Allowed HTTP methods
+    allowedHeaders: 'Content-Type,Authorization' // Allowed headers
+}));
 
 app.use(express.json());
 app.use("/book_images", express.static(path.join(__dirname, "book_images")));
