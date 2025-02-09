@@ -256,14 +256,17 @@ const getBestBooks = async (req, res) => {
         },
       },
       {
-        $limit: 10, // Limit to top 10 books
+        $limit: 4, // Limit to top 10 books
       },
       {
         $project: {
           title: 1, // Include book fields you want to return
           author: 1,
           image: 1, // Include the image field
+          description: 1,
           price: 1, // Include the price field
+          hasDiscount: 1,
+          discount_percent: 1,
           averageRating: 1, // Include the calculated average rating
           reviewsCount: { $size: "$reviews" }, // Count the number of reviews for each book
         },
