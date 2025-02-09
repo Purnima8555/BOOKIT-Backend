@@ -9,7 +9,7 @@ const {
 const { authenticateToken } = require("../security/authorization");
 
 router.post("/", authenticateToken, addFavorite);
-router.get("/:user_id", getFavoritesByUser);
-router.delete("/:id", removeFavorite);
+router.get("/:user_id", authenticateToken, getFavoritesByUser);
+router.delete("/:id", authenticateToken, removeFavorite);
 
 module.exports = router;
