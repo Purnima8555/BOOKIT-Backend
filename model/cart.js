@@ -17,6 +17,18 @@ const cartSchema = new mongoose.Schema({
     min: 1,
     default: 1,
   },
+  type: {
+    type: String,
+    enum: ["purchase", "rental"],
+    required: true,
+    default: "purchase",
+  },
+  rentalDays: {
+    type: Number,
+    min: 1,
+    required: false, // No longer required by default
+    // No default value; only set for "rental"
+  },
   added_at: {
     type: Date,
     default: Date.now,
