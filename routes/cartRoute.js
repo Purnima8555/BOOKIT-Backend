@@ -10,9 +10,9 @@ const {
 } = require("../controller/cartController");
 
 router.post("/add", authenticateToken, addToCart);
-router.get("/:user_id", getCartByUser);
-router.patch("/update/:id", updateCartItem);
-router.delete("/remove/:id", removeFromCart);
-router.delete("/clear/:user_id", clearCart);
+router.get("/:user_id", authenticateToken, getCartByUser);
+router.patch("/update/:id", authenticateToken, updateCartItem);
+router.delete("/remove/:id", authenticateToken, removeFromCart);
+router.delete("/clear/:user_id", authenticateToken, clearCart);
 
 module.exports = router;
