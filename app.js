@@ -8,15 +8,21 @@ const feedbackRouter = require("./routes/feedbackRoute");
 const favoriteRouter = require("./routes/favoriteRoute");
 const cartRouter = require("./routes/cartRoute");
 const orderRouter = require("./routes/orderRoute");
+const bookRequestRoutes = require("./routes/bookRequestRoute");
+const notificationRoutes = require("./routes/notificationRoute");
 
 const app = express();
 
 connectDb();
 const cors = require('cors');
+const Customer = require("./model/customer"); // Import Customer model
+const Notification = require("./model/notification"); // Import Notification model
+const BookRequest = require("./model/bookRequest");
+const Book = require("./model/book");
 
 app.use(cors({
     origin: 'http://localhost:5173', // Allow frontend to access the backend
-    methods: 'GET,POST,PUT,DELETE', // Allowed HTTP methods
+    methods: 'GET,POST,PUT,PATCH,DELETE', // Allowed HTTP methods
     allowedHeaders: 'Content-Type,Authorization' // Allowed headers
 }));
 
@@ -31,6 +37,8 @@ app.use("/api/feedback", feedbackRouter);
 app.use("/api/favorites", favoriteRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/book-request", bookRequestRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/profilePicture", express.static("public/profilePicture"));
 
 
