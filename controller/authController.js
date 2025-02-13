@@ -95,7 +95,7 @@ const login = async (req, res) => {
 
         // Generate JWT
         const token = jwt.sign(
-            { username: cred.username, role: cred.role },
+            { userId: cred._id, username: cred.username, role: cred.role },
             SECRET_KEY,
             { expiresIn: '1d' }
         );
@@ -308,5 +308,33 @@ const verifyCode = async (req, res) => {
 };
 
 
+// New function to check if username or email exists
+const checkUserExists = async (req, res) => {
+    const { username, email } = req.body;
 
-module.exports = { register, login, deleteUser, forgotPassword, resetPassword, verifyCode, uploadImage };
+    try {
+        // Validate input: at least one field must be provided
+        if (!username && !email) {
+            return res.status(400).json({ message: "Please provide a username or email to check." });
+        }
+
+        // Check for existing username in Credential collection
+        const existingUsername = username ? await Credential.findOne({ username }) : null;
+        
+        // Check for existing email in Customer collection
+        const existingEmail = email ? await Customer.findOne({ email }) : null;
+
+        // Prepare response
+        const response = {
+            usernameExists: !!existingUsername,
+            emailExists: !!existingEmail,
+        };
+
+        res.status(200).json(response);
+    } catch (error) {
+        console.error("Error checking user existence:", error);
+        res.status(500).json({ message: "Error checking user existence", error: error.message });
+    }
+};
+
+module.exports = { register, login, deleteUser, forgotPassword, resetPassword, verifyCode, uploadImage, checkUserExists };
