@@ -1,18 +1,41 @@
 const Cart = require("../model/cart");
+const Book = require("../model/book");
 
 // Add a book to the cart
 const addToCart = async (req, res) => {
   try {
-    const { user_id, book_id, quantity } = req.body;
+    const { user_id, book_id, quantity, type, rentalDays } = req.body;
+
+    // Validate required fields
+    if (!user_id || !book_id) {
+      return res.status(400).json({ message: "user_id and book_id are required" });
+    }
+
+    // Validate type
+    if (!["purchase", "rental"].includes(type)) {
+      return res.status(400).json({ message: "Invalid type. Must be 'purchase' or 'rental'" });
+    }
+
+    // Check if the book exists
+    const book = await Book.findById(book_id);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    // For "rental", ensure rentalDays is provided
+    if (type === "rental" && (!rentalDays || rentalDays < 1)) {
+      return res.status(400).json({ message: "rentalDays is required for rental type and must be at least 1" });
+    }
 
     // Check if the book is already in the cart
     const existingCartItem = await Cart.findOne({ user_id, book_id });
 
     if (existingCartItem) {
-      // If the book is already in the cart, update the quantity
+      // Update existing item
       existingCartItem.quantity += quantity || 1;
+      existingCartItem.type = type;
+      existingCartItem.rentalDays = type === "rental" ? rentalDays : undefined;
       await existingCartItem.save();
-
       return res.status(200).json({ message: "Cart updated successfully", cart: existingCartItem });
     }
 
@@ -21,73 +44,100 @@ const addToCart = async (req, res) => {
       user_id,
       book_id,
       quantity: quantity || 1,
+      type,
+      rentalDays: type === "rental" ? rentalDays : undefined,
     });
 
     await newCartItem.save();
-
     res.status(201).json({ message: "Book added to cart", cart: newCartItem });
   } catch (err) {
     console.error("Error adding to cart:", err);
-    res.status(500).json({ message: "Error adding to cart", error: err });
+    res.status(500).json({ message: "Error adding to cart", error: err.message });
   }
 };
 
-// Get all cart items for a user
+// Rest of the controller remains unchanged
 const getCartByUser = async (req, res) => {
   try {
     const { user_id } = req.params;
 
     const cartItems = await Cart.find({ user_id })
-      .populate("book_id", "title price") // Populate book details (e.g., title, price)
+      .populate({
+        path: "book_id",
+        select: "title author image price rental_price",
+      })
       .sort({ added_at: -1 });
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(404).json({ message: "No items in cart" });
     }
 
-    res.status(200).json(cartItems);
+    const enrichedCartItems = cartItems.map(item => {
+      const book = item.book_id;
+      const basePrice = item.type === "purchase" ? book.price : book.rental_price * (item.rentalDays / 7);
+      return {
+        ...item._doc,
+        purchasePrice: book.price,
+        rentalPrice: book.rental_price,
+        basePrice: basePrice,
+        totalPrice: basePrice * item.quantity,
+      };
+    });
+
+    res.status(200).json(enrichedCartItems);
   } catch (err) {
     console.error("Error fetching cart:", err);
-    res.status(500).json({ message: "Error fetching cart", error: err });
+    res.status(500).json({ message: "Error fetching cart", error: err.message });
   }
 };
 
-// Update the quantity of a cart item
 const updateCartItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quantity } = req.body;
+    const { quantity, type, rentalDays } = req.body;
 
-    // Find the cart item and update the quantity
-    const cartItem = await Cart.findById(id);
-
+    const cartItem = await Cart.findById(id).populate("book_id", "price rental_price");
     if (!cartItem) {
       return res.status(404).json({ message: "Cart item not found" });
     }
 
     if (quantity === 0) {
-      // If quantity is 0, remove the item from the cart
-      await cartItem.delete();
+      await cartItem.deleteOne();
       return res.status(200).json({ message: "Cart item removed" });
     }
 
-    cartItem.quantity = quantity;
+    if (quantity !== undefined) cartItem.quantity = quantity;
+    if (type) {
+      cartItem.type = type;
+      cartItem.rentalDays = type === "rental" && rentalDays ? rentalDays : undefined;
+    } else if (rentalDays && cartItem.type === "rental") {
+      cartItem.rentalDays = rentalDays;
+    }
+
     await cartItem.save();
 
-    res.status(200).json({ message: "Cart updated successfully", cart: cartItem });
+    const book = cartItem.book_id;
+    const basePrice = cartItem.type === "purchase" ? book.price : book.rental_price * (cartItem.rentalDays / 7);
+    const updatedItem = {
+      ...cartItem._doc,
+      purchasePrice: book.price,
+      rentalPrice: book.rental_price,
+      basePrice: basePrice,
+      totalPrice: basePrice * cartItem.quantity,
+    };
+
+    res.status(200).json({ message: "Cart updated successfully", cart: updatedItem });
   } catch (err) {
     console.error("Error updating cart item:", err);
-    res.status(500).json({ message: "Error updating cart item", error: err });
+    res.status(500).json({ message: "Error updating cart item", error: err.message });
   }
 };
 
-// Remove a specific book from the cart
 const removeFromCart = async (req, res) => {
   try {
     const { id } = req.params;
 
     const deletedCartItem = await Cart.findByIdAndDelete(id);
-
     if (!deletedCartItem) {
       return res.status(404).json({ message: "Cart item not found" });
     }
@@ -95,11 +145,10 @@ const removeFromCart = async (req, res) => {
     res.status(200).json({ message: "Cart item removed" });
   } catch (err) {
     console.error("Error removing cart item:", err);
-    res.status(500).json({ message: "Error removing cart item", error: err });
+    res.status(500).json({ message: "Error removing cart item", error: err.message });
   }
 };
 
-// Clear all items from the cart for a user
 const clearCart = async (req, res) => {
   try {
     const { user_id } = req.params;
@@ -109,7 +158,7 @@ const clearCart = async (req, res) => {
     res.status(200).json({ message: "Cart cleared successfully" });
   } catch (err) {
     console.error("Error clearing cart:", err);
-    res.status(500).json({ message: "Error clearing cart", error: err });
+    res.status(500).json({ message: "Error clearing cart", error: err.message });
   }
 };
 
