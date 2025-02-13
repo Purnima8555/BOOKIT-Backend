@@ -10,6 +10,10 @@ const {
   getNewBooks,
   getBestBooks,
   deleteBook,
+  searchByTitleAndISBN,
+  searchByAuthor,
+  searchBySeries,
+  getBookCount,
 } = require("../controller/bookController");
 
 const { authenticateToken, authorizeRole } = require("../security/authorization");
@@ -34,28 +38,32 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    // Define allowed file types
     const allowedTypes = /jpeg|jpg|png/;
-    
-    // Check if the file type matches the allowed types
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
     
     if (extname && mimetype) {
-      return cb(null, true); // Accept the file
+      return cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPG, JPEG, and PNG are allowed.'), false); // Reject the file
+      cb(new Error('Invalid file type. Only JPG, JPEG, and PNG are allowed.'), false);
     }
   },
 });
 
+// Specific routes first
+router.get("/count", authenticateToken, getBookCount);
 router.get("/", getAllBooks);
-router.get("/:id", getBookById);
 router.get("/genre/:genre", getByGenre);
 router.get("/new/newbooks", getNewBooks);
 router.get("/best/bestbooks", getBestBooks);
-router.post("/", upload.single('file'), addBook);
-router.put("/:id", upload.single('file'), updateBook);
-router.delete("/:id", authorizeRole("Admin"), deleteBook);
+router.get("/search/title-isbn", searchByTitleAndISBN);
+router.get("/search/author", searchByAuthor);
+router.get("/search/series", searchBySeries);
+
+// Dynamic routes after specific routes
+router.get("/:id", getBookById);
+router.post("/add", upload.single("image"), authenticateToken, addBook);
+router.put("/update/:id", upload.single("image"), authenticateToken, updateBook);
+router.delete("/delete/:id", authenticateToken, deleteBook);
 
 module.exports = router;
