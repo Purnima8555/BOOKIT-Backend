@@ -29,23 +29,23 @@ const getBookById = async (req, res) => {
 };
 
 const addBook = async (req, res) => {
-  const { 
-    title, 
-    author, 
-    genre, // This is the genre field
-    price, 
-    rental_price, 
-    publisher, 
-    ISBN, 
-    description, 
-    series, 
-    isAvailable, 
-    available_stock, 
-    hasDiscount, 
-    discount_type, 
-    discount_percent, 
-    discount_start, 
-    discount_end 
+  const {
+    title,
+    author,
+    genre,
+    price,
+    rental_price,
+    publisher,
+    ISBN,
+    description,
+    series,
+    isAvailable,
+    available_stock,
+    hasDiscount,
+    discount_type,
+    discount_percent,
+    discount_start,
+    discount_end
   } = req.body;
 
   try {
@@ -320,6 +320,97 @@ const deleteBook = async (req, res) => {
   }
 };
 
+// New: Search by Title and ISBN
+const searchByTitleAndISBN = async (req, res) => {
+  try {
+    const { query } = req.query; // Get the search query from query parameters
+
+    if (!query) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    // Search for books where title or ISBN matches the query (case-insensitive)
+    const books = await Book.find({
+      $or: [
+        { title: { $regex: query, $options: 'i' } }, // Case-insensitive search for title
+        { ISBN: { $regex: query, $options: 'i' } }   // Case-insensitive search for ISBN
+      ]
+    });
+
+    if (books.length === 0) {
+      return res.status(404).json({ message: "No books found matching the search criteria" });
+    }
+
+    res.status(200).json(books);
+  } catch (err) {
+    console.error("Error searching books by title or ISBN:", err);
+    res.status(500).json({ message: "Error searching books", error: err });
+  }
+};
+
+// New: Search by Author
+const searchByAuthor = async (req, res) => {
+  try {
+    const { author } = req.query; // Get the author query from query parameters
+
+    if (!author) {
+      return res.status(400).json({ message: "Author query is required" });
+    }
+
+    // Search for books where author matches the query (case-insensitive)
+    const books = await Book.find({
+      author: { $regex: author, $options: 'i' } // Case-insensitive search for author
+    });
+
+    if (books.length === 0) {
+      return res.status(404).json({ message: "No books found by this author" });
+    }
+
+    res.status(200).json(books);
+  } catch (err) {
+    console.error("Error searching books by author:", err);
+    res.status(500).json({ message: "Error searching books by author", error: err });
+  }
+};
+
+
+// New: Search by Series
+const searchBySeries = async (req, res) => {
+  try {
+    const { series } = req.query; // Get the series query from query parameters
+    if (!series) {
+      return res.status(400).json({ message: "Series query is required" });
+    }
+
+    // Search for books where series matches the query (case-insensitive)
+    const books = await Book.find({
+      series: { $regex: series, $options: 'i' } // Case-insensitive search for series
+    });
+
+    if (books.length === 0) {
+      return res.status(404).json({ message: "No books found in this series" });
+    }
+
+    res.status(200).json(books);
+  } catch (err) {
+    console.error("Error searching books by series:", err);
+    res.status(500).json({ message: "Error searching books by series", error: err });
+  }
+};
+
+
+// New: Get total book count
+const getBookCount = async (req, res) => {
+  try {
+    const count = await Book.countDocuments();
+    console.log("Total books in database:", count);
+    res.status(200).json({ count });
+  } catch (err) {
+    console.error("Error fetching book count:", err);
+    res.status(500).json({ message: "Error fetching book count", error: err.message || err });
+  }
+};
+
 module.exports = {
   getAllBooks,
   getBookById,
@@ -329,4 +420,8 @@ module.exports = {
   getNewBooks,
   getBestBooks,
   deleteBook,
+  searchByTitleAndISBN,
+  searchByAuthor,
+  searchBySeries,
+  getBookCount, // Export new function
 };
