@@ -30,11 +30,8 @@ const getFavoritesByUser = async (req, res) => {
       .populate("book_id", "title author price image availability_status")
       .sort({ _id: -1 });
 
-    if (!favorites || favorites.length === 0) {
-      return res.status(404).json({ message: "No books found in favorites" });
-    }
-
-    res.status(200).json(favorites);
+    // Return 200 with empty array if no favorites exist
+    res.status(200).json(favorites || []);
   } catch (err) {
     console.error("Error fetching favorites:", err);
     res.status(500).json({ message: "Error fetching favorites", error: err });
