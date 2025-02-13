@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const Customer = require("../model/customer");
 const Credential = require("../model/credential");
 const nodemailer = require("nodemailer");
@@ -12,26 +13,82 @@ const findAll = async (req,res) => {
 }
 
 const save = async (req, res) => {
-    try {
-        const { username, full_name, email, contact_no, address, role, image } = req.body;
+  const { username, full_name, email, contact_no, address, role, password } = req.body;
 
-        const imagePath = req.file.filename; // Store only filename, not full path
-
-        const customer = new Customer({
-            username: req.body.username,
-            full_name: req.body.full_name,
-            email: req.body.email,
-            contact_no: req.body.contact_no,
-            role: req.body.role,
-            address: req.body.address,
-            image: imagePath // Save image in DB
-        });
-
-        await customer.save();
-        res.status(201).json(customer);
-    } catch (e) {
-        res.status(500).json({ message: "Error saving customer", error: e });
+  try {
+    // Validate required fields
+    if (!username || !password || !full_name || !email || !contact_no) {
+      return res.status(400).json({ message: "All required fields (username, password, full_name, email, contact_no) must be provided" });
     }
+
+    // Check if username already exists
+    const existingUser = await Credential.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+
+    // Check if an image file is provided
+    if (!req.file) {
+      return res.status(400).json({ message: "Image file is required" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new Credential document
+    const cred = new Credential({
+      username,
+      password: hashedPassword,
+      role: role || "User", // Default to "User" if not provided
+    });
+    await cred.save();
+
+    // Create the Customer document with the same _id
+    const customer = new Customer({
+      _id: cred._id,
+      username,
+      full_name,
+      email,
+      contact_no,
+      role: role || "User",
+      address,
+      image: req.file.filename, // Save image filename like addBook
+    });
+    await customer.save();
+
+    // Set up nodemailer transporter for sending confirmation email
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "rpurnima8555@gmail.com",
+        pass: "kwvuyzwguvdohwzu",
+      },
+    });
+
+    // Send welcome email to the customer
+    const info = await transporter.sendMail({
+      from: "rpurnima8555@gmail.com",
+      to: customer.email,
+      subject: "Welcome to BOOKIT!",
+      html: `
+        <h1>Welcome, ${customer.full_name}!</h1>
+        <p>Your account has been created successfully. Here are your details:</p>
+        <ul>
+          <li><strong>Username:</strong> ${customer.username}</li>
+          <li><strong>Role:</strong> ${customer.role}</li>
+          <li><strong>Contact No:</strong> ${customer.contact_no}</li>
+        </ul>
+        <p>Thank you for joining us!</p>
+      `,
+    });
+
+    res.status(201).json({ message: "User saved successfully", customer, emailInfo: info });
+  } catch (error) {
+    console.error("Error saving customer:", error);
+    res.status(500).json({ message: "Error saving customer", error: error.message });
+  }
 };
 
 const findById = async (req,res) => {
@@ -43,14 +100,28 @@ const findById = async (req,res) => {
     }
 }
 
-const deleteById = async (req,res) => {
-    try {
-        const customers = await Customer.findByIdAndDelete(req.params.id);
-    res.status(200).json("Data Deleted");
-    } catch (e) {
-        res.json(e)
+const deleteById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Delete from Customer collection
+    const customer = await Customer.findByIdAndDelete(id);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
-}
+
+    // Delete from Credential collection using the same _id
+    const credential = await Credential.findByIdAndDelete(id);
+    if (!credential) {
+      return res.status(404).json({ message: "Credential not found for this customer" });
+    }
+
+    res.status(200).json({ message: "User deleted from both Customer and Credential collections" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Error deleting user", error: error.message });
+  }
+};
 
 const update = async (req, res) => {
     try {
@@ -120,10 +191,23 @@ const update = async (req, res) => {
 };
 
 
-module.exports= {
-    findAll,
-    save,
-    findById,
-    deleteById,
-    update
-}
+// New: Get total customer count
+const getCustomerCount = async (req, res) => {
+  try {
+    const count = await Customer.countDocuments();
+    console.log("Total customers in database:", count);
+    res.status(200).json({ count });
+  } catch (err) {
+    console.error("Error fetching customer count:", err);
+    res.status(500).json({ message: "Error fetching customer count", error: err.message || err });
+  }
+};
+
+module.exports = {
+  findAll,
+  save,
+  findById,
+  deleteById,
+  update,
+  getCustomerCount, // Export new function
+};
