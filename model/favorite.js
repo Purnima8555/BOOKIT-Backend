@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const favoriteSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer",
+    ref: "customers",
     required: true,
   },
   book_id: {
