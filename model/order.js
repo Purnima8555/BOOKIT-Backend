@@ -6,21 +6,36 @@ const orderSchema = new mongoose.Schema({
     ref: "customers",
     required: true,
   },
-  orderType: {
-    type: String,
-    enum: ["Purchase", "Rent"],
-    required: true,
-  },
   items: [
     {
       book_id: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
       quantity: { type: Number, required: true, min: 1 },
-      rentDuration: { type: Number, default: 0 },
+      type: {
+        type: String,
+        enum: ["purchase", "rental"],
+        required: true,
+      },
+      rentalDays: { type: Number, default: 0 },
     },
   ],
+  deliveryFee: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
   total_price: {
     type: Number,
     required: true,
+  },
+  paymentMethod: {
+    type: String,
+    enum: ["cod", "online", "esewa"],
+    required: true,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ["done", "not done"],
+    default: "not done",
   },
   status: {
     type: String,
