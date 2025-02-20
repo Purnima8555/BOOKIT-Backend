@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { findAll, save, findById, update, getCustomerCount, deleteById } = require("../controller/customerController");
+const { findAll, save, findById, update, getCustomerCount, deleteById, getAndUpdate } = require("../controller/customerController");
 const CustomerValidation = require("../validation/customerValidation");
 const { authenticateToken } = require("../security/authorization");
 const multer = require("multer");
@@ -39,5 +39,5 @@ router.post("/save", upload.single("image"), authenticateToken, save);
 router.delete("/:id", authenticateToken, deleteById);
 router.get("/:id", findById);
 router.put("/update/:id", authenticateToken, update);
-
+router.put('/:id', upload.single("image"), getAndUpdate);
 module.exports = router;
