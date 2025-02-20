@@ -3,8 +3,7 @@ const Notification = require("../model/notification");
 // Get notifications by user ID (all notifications, not just unread)
 const getByUserId = async (req, res) => {
   try {
-    console.log("Full req.user:", req.user); // Log entire req.user object
-    const userId = req.user?.userId; // Safely access userId
+    const userId = req.user?.userId;
 
     if (!userId) {
       console.error("No userId found in req.user");
@@ -14,7 +13,12 @@ const getByUserId = async (req, res) => {
     console.log("Fetching notifications for userId from JWT:", userId);
     const notifications = await Notification.find({ userId })
       .sort({ createdAt: -1 })
-      .populate("relatedId", "title author");
+      .populate({
+        path: "relatedId",
+        select: "title author", // For BookRequest or Order items.book_id
+        match: { relatedModel: { $in: ["BookRequest", "Order"] } },
+        populate: { path: "items.book_id", select: "title" }, // For Order
+      });
 
     console.log("Notifications found:", notifications);
 
@@ -70,11 +74,15 @@ const getAllForAdmin = async (req, res) => {
       return res.status(403).json({ message: "Access denied: Admin only" });
     }
 
-    // Filter for only "warning" type notifications (admin-specific)
     const notifications = await Notification.find({ type: "warning" })
       .sort({ createdAt: -1 })
       .populate("userId", "full_name username email")
-      .populate("relatedId", "title author");
+      .populate({
+        path: "relatedId",
+        select: "items", // For Order
+        match: { relatedModel: { $in: ["BookRequest", "Order"] } },
+        populate: { path: "items.book_id", select: "title" }, // Populate book titles in Order
+      });
 
     console.log("Admin notifications found:", notifications);
 
