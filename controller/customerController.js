@@ -191,6 +191,111 @@ const update = async (req, res) => {
 };
 
 
+// Updated: Get and Update Customer with Image Upload
+const getAndUpdate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const customer = await Customer.findById(id);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    // If no updates provided (no body and no file), just return the customer data
+    if ((!updates || Object.keys(updates).length === 0) && !req.file) {
+      return res.status(200).json(customer);
+    }
+
+    // Validate and handle updates
+    const { username, full_name, email, contact_no, address, role } = updates;
+
+    // Check if username is being updated and already exists
+    if (username && username !== customer.username) {
+      const existingUser = await Credential.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+    }
+
+    // Prepare update data
+    const updateData = {
+      username: username || customer.username,
+      full_name: full_name || customer.full_name,
+      email: email || customer.email,
+      contact_no: contact_no || customer.contact_no,
+      address: address || customer.address,
+      role: role || customer.role,
+      image: req.file ? req.file.filename : customer.image, // Use new filename if uploaded
+    };
+
+    // Update Customer document
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    // Update Credential document (only username if provided)
+    if (username) {
+      const updatedCred = await Credential.findOneAndUpdate(
+        { _id: id },
+        { username },
+        { new: true }
+      );
+      if (!updatedCred) {
+        return res.status(404).json({ message: "Credential not found for this customer" });
+      }
+    }
+
+    // Send email notification if updates were made
+    let info;
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "rpurnima8555@gmail.com",
+          pass: "kwvuyzwguvdohwzu",
+        },
+      });
+
+      info = await transporter.sendMail({
+        from: "rpurnima8555@gmail.com",
+        to: updatedCustomer.email,
+        subject: "Your Account Details Have Been Updated",
+        html: `
+          <h1>Hello ${updatedCustomer.full_name},</h1>
+          <p>Your account details have been successfully updated. Here are your updated details:</p>
+          <ul>
+            <li><strong>Full Name:</strong> ${updatedCustomer.full_name}</li>
+            <li><strong>Username:</strong> ${updatedCustomer.username}</li>
+            <li><strong>Email:</strong> ${updatedCustomer.email}</li>
+            <li><strong>Contact Number:</strong> ${updatedCustomer.contact_no}</li>
+            <li><strong>Address:</strong> ${updatedCustomer.address}</li>
+            <li><strong>Role:</strong> ${updatedCustomer.role}</li>
+          </ul>
+          <p>If you did not request these changes, please contact our support team immediately.</p>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      // Continue with response even if email fails
+    }
+
+    res.status(200).json({
+      message: "Customer details retrieved and updated successfully",
+      customer: updatedCustomer,
+      emailInfo: info || { message: "Email sending failed but update succeeded" },
+    });
+  } catch (error) {
+    console.error("Error in getAndUpdate customer:", error);
+    res.status(500).json({ message: "Error in getAndUpdate customer", error: error.message });
+  }
+};
+
+
 // New: Get total customer count
 const getCustomerCount = async (req, res) => {
   try {
@@ -209,5 +314,6 @@ module.exports = {
   findById,
   deleteById,
   update,
-  getCustomerCount, // Export new function
+  getAndUpdate,
+  getCustomerCount,
 };
