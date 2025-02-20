@@ -35,7 +35,7 @@ const submitBookRequest = async (req, res) => {
 
     const userNotification = new Notification({
       userId,
-      message: `Your request for "${title}" by ${author} has been submitted and is awaiting admin approval. Request ID: ${bookRequest._id.toString()}`,
+      message: `Your request for "${title}" by ${author} has been submitted and is awaiting admin approval.`,
       type: "info",
       relatedId: bookRequest._id,
     });
@@ -91,7 +91,7 @@ const getAllBookRequests = async (req, res) => {
 
     const bookRequests = await BookRequest.find()
       .sort({ createdAt: -1 }) // Newest first
-      .populate("userId", "full_name username email"); // Populate requester details
+      .populate("userId", "full_name username email");
 
     console.log("All book requests retrieved:", bookRequests);
     res.status(200).json(bookRequests);
@@ -104,7 +104,7 @@ const getAllBookRequests = async (req, res) => {
 // New: Update book request status (for admins)
 const updateBookRequest = async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body; // Expect status in request body (e.g., "approved", "rejected", "fulfilled")
+  const { status } = req.body;
 
   try {
     const role = req.user?.role;
@@ -135,7 +135,7 @@ const updateBookRequest = async (req, res) => {
       const userNotification = new Notification({
         userId: bookRequest.userId,
         message: `Your request for "${bookRequest.title}" by ${bookRequest.author} has been ${status}. Request ID: ${bookRequest._id.toString()}`,
-        type: status === "approved" || status === "fulfilled" ? "success" : "error", // Success for approved/fulfilled, error for rejected
+        type: status === "approved" || status === "fulfilled" ? "success" : "error",
         relatedId: bookRequest._id,
       });
       await userNotification.save();
