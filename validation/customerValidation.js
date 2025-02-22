@@ -8,8 +8,8 @@ const customerSchema = Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
-    role: Joi.string().valid("User", "Admin").default("User"), // Default role
-    image: Joi.string().allow("", null).optional(), // Allow optional image
+    role: Joi.string().valid("User", "Admin").default("User"),
+    image: Joi.string().allow("", null).optional(),
 });
 
 function CustomerValidation(req, res, next) {

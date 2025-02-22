@@ -23,12 +23,12 @@ const notificationSchema = new mongoose.Schema(
     },
     relatedId: {
       type: mongoose.Schema.Types.ObjectId,
-      refPath: "relatedModel", // Dynamic reference based on relatedModel
+      refPath: "relatedModel",
       default: null,
     },
     relatedModel: {
       type: String,
-      enum: ["BookRequest", "Order"], // Can reference either BookRequest or Order
+      enum: ["BookRequest", "Order"],
       default: null,
     },
   },

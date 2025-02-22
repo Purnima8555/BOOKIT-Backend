@@ -26,8 +26,7 @@ const cartSchema = new mongoose.Schema({
   rentalDays: {
     type: Number,
     min: 1,
-    required: false, // No longer required by default
-    // No default value; only set for "rental"
+    required: false,
   },
   added_at: {
     type: Date,

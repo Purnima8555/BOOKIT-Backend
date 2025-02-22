@@ -15,21 +15,19 @@ const app = express();
 
 connectDb();
 const cors = require('cors');
-const Customer = require("./model/customer"); // Import Customer model
-const Notification = require("./model/notification"); // Import Notification model
+const Customer = require("./model/customer");
+const Notification = require("./model/notification");
 const BookRequest = require("./model/bookRequest");
 const Book = require("./model/book");
 
 app.use(cors({
-    origin: 'http://localhost:5173', // Allow frontend to access the backend
-    methods: 'GET,POST,PUT,PATCH,DELETE', // Allowed HTTP methods
-    allowedHeaders: 'Content-Type,Authorization' // Allowed headers
+    origin: 'http://localhost:5173',
+    methods: 'GET,POST,PUT,PATCH,DELETE',
+    allowedHeaders: 'Content-Type,Authorization'
 }));
 
 app.use(express.json());
 app.use("/book_images", express.static(path.join(__dirname, "book_images")));
-// app.use('/profilePicture', express.static(path.join(__dirname, 'public', 'profilePicture')));
-
 app.use("/api/customer", CustomerRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/books", BookRouter);

@@ -1,5 +1,6 @@
 const Notification = require("../model/notification");
 
+
 // Get notifications by user ID (all notifications, not just unread)
 const getByUserId = async (req, res) => {
   try {
@@ -15,9 +16,9 @@ const getByUserId = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate({
         path: "relatedId",
-        select: "title author", // For BookRequest or Order items.book_id
+        select: "title author",
         match: { relatedModel: { $in: ["BookRequest", "Order"] } },
-        populate: { path: "items.book_id", select: "title" }, // For Order
+        populate: { path: "items.book_id", select: "title" },
       });
 
     console.log("Notifications found:", notifications);
@@ -32,6 +33,7 @@ const getByUserId = async (req, res) => {
     res.status(500).json({ message: "Error fetching user notifications", error: error.message });
   }
 };
+
 
 // Mark a notification as read
 const patchMarkAsRead = async (req, res) => {
@@ -59,6 +61,7 @@ const patchMarkAsRead = async (req, res) => {
   }
 };
 
+
 // Get all notifications for admin (only type: "warning")
 const getAllForAdmin = async (req, res) => {
   try {
@@ -79,9 +82,9 @@ const getAllForAdmin = async (req, res) => {
       .populate("userId", "full_name username email")
       .populate({
         path: "relatedId",
-        select: "items", // For Order
+        select: "items",
         match: { relatedModel: { $in: ["BookRequest", "Order"] } },
-        populate: { path: "items.book_id", select: "title" }, // Populate book titles in Order
+        populate: { path: "items.book_id", select: "title" },
       });
 
     console.log("Admin notifications found:", notifications);

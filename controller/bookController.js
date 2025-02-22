@@ -15,6 +15,7 @@ const getAllBooks = async (req, res) => {
   }
 };
 
+
 // Get a specific book by ID
 const getBookById = async (req, res) => {
   try {
@@ -76,7 +77,7 @@ const addBook = async (req, res) => {
       title,
       image: req.file.filename,
       author,
-      genre: parsedGenre, // Save parsed genre array
+      genre: parsedGenre,
       price,
       rental_price,
       publisher,
@@ -194,7 +195,7 @@ const getByGenre = async (req, res) => {
     
     // Query the database for books that have the genre
     const books = await Book.find({
-      genre: { $in: [genre] } // Use MongoDB $in operator to check if the genre is in the array
+      genre: { $in: [genre] }
     });
 
     if (books.length === 0) {
@@ -209,6 +210,7 @@ const getByGenre = async (req, res) => {
 };
 
 
+// Get New books
 const getNewBooks = async (req, res) => {
   try {
     // Fetch the latest 10 books ordered by createdAt (desc)
@@ -232,43 +234,43 @@ const getBestBooks = async (req, res) => {
     const books = await Book.aggregate([
       {
         $lookup: {
-          from: "feedbacks", // The name of the collection for feedbacks (adjust if different)
-          localField: "_id",  // Field in the Book collection
-          foreignField: "book_id", // Field in the Feedback collection
-          as: "reviews", // Join the reviews as an array
+          from: "feedbacks",
+          localField: "_id",
+          foreignField: "book_id",
+          as: "reviews",
         },
       },
       {
         $match: {
-          "reviews.0": { $exists: true }, // Filter out books that have no reviews
+          "reviews.0": { $exists: true },
         },
       },
       {
         $addFields: {
           averageRating: {
-            $avg: "$reviews.rating", // Calculate average rating
+            $avg: "$reviews.rating",
           },
         },
       },
       {
         $sort: {
-          averageRating: -1, // Sort by the average rating, highest first
+          averageRating: -1,
         },
       },
       {
-        $limit: 4, // Limit to top 10 books
+        $limit: 4,
       },
       {
         $project: {
-          title: 1, // Include book fields you want to return
+          title: 1,
           author: 1,
-          image: 1, // Include the image field
+          image: 1,
           description: 1,
-          price: 1, // Include the price field
+          price: 1,
           hasDiscount: 1,
           discount_percent: 1,
-          averageRating: 1, // Include the calculated average rating
-          reviewsCount: { $size: "$reviews" }, // Count the number of reviews for each book
+          averageRating: 1,
+          reviewsCount: { $size: "$reviews" },
         },
       },
     ]);
@@ -323,7 +325,7 @@ const deleteBook = async (req, res) => {
 // New: Search by Title and ISBN
 const searchByTitleAndISBN = async (req, res) => {
   try {
-    const { query } = req.query; // Get the search query from query parameters
+    const { query } = req.query;
 
     if (!query) {
       return res.status(400).json({ message: "Search query is required" });
@@ -332,8 +334,8 @@ const searchByTitleAndISBN = async (req, res) => {
     // Search for books where title or ISBN matches the query (case-insensitive)
     const books = await Book.find({
       $or: [
-        { title: { $regex: query, $options: 'i' } }, // Case-insensitive search for title
-        { ISBN: { $regex: query, $options: 'i' } }   // Case-insensitive search for ISBN
+        { title: { $regex: query, $options: 'i' } },
+        { ISBN: { $regex: query, $options: 'i' } }
       ]
     });
 
@@ -351,7 +353,7 @@ const searchByTitleAndISBN = async (req, res) => {
 // New: Search by Author
 const searchByAuthor = async (req, res) => {
   try {
-    const { author } = req.query; // Get the author query from query parameters
+    const { author } = req.query;
 
     if (!author) {
       return res.status(400).json({ message: "Author query is required" });
@@ -359,7 +361,7 @@ const searchByAuthor = async (req, res) => {
 
     // Search for books where author matches the query (case-insensitive)
     const books = await Book.find({
-      author: { $regex: author, $options: 'i' } // Case-insensitive search for author
+      author: { $regex: author, $options: 'i' }
     });
 
     if (books.length === 0) {
@@ -377,14 +379,14 @@ const searchByAuthor = async (req, res) => {
 // New: Search by Series
 const searchBySeries = async (req, res) => {
   try {
-    const { series } = req.query; // Get the series query from query parameters
+    const { series } = req.query;
     if (!series) {
       return res.status(400).json({ message: "Series query is required" });
     }
 
     // Search for books where series matches the query (case-insensitive)
     const books = await Book.find({
-      series: { $regex: series, $options: 'i' } // Case-insensitive search for series
+      series: { $regex: series, $options: 'i' }
     });
 
     if (books.length === 0) {
@@ -423,5 +425,5 @@ module.exports = {
   searchByTitleAndISBN,
   searchByAuthor,
   searchBySeries,
-  getBookCount, // Export new function
+  getBookCount,
 };

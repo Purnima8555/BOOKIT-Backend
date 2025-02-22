@@ -8,6 +8,8 @@ const upload = require("../middleware/uploads");
 
 const SECRET_KEY = "21e6fb393716f568bf5ab155f62379812ac5b048efdea976aa1b1699f9e7e7dd";
 
+
+// Register function
 const register = async (req, res) => {
     const { username, password, confirmPassword, role, full_name, email, contact_no, address, image } = req.body;
 
@@ -37,7 +39,7 @@ const register = async (req, res) => {
             contact_no,
             role,
             address,
-            image, // Just adding the image field as requested
+            image,
         });
 
         await customer.save();
@@ -77,6 +79,8 @@ const register = async (req, res) => {
     }
 };
 
+
+// Login function
 const login = async (req, res) => {
     const { username, password } = req.body;
 
@@ -114,10 +118,12 @@ const login = async (req, res) => {
 
 const asyncHandler = require("../middleware/async");
 
+
+// Image Upload function
 const uploadImage = asyncHandler(async (req, res) => {
-    // Check what is in the request body and file
-    console.log("Request Body:", req.body);  // This will show any extra data
-    console.log("File:", req.file);  // This will show the file object
+
+    console.log("Request Body:", req.body);
+    console.log("File:", req.file);
 
     if (!req.file) {
         console.log("No file uploaded or file not processed by multer");
@@ -143,6 +149,8 @@ const uploadImage = asyncHandler(async (req, res) => {
     });
 });
 
+
+// Delete user function
 const deleteUser = async (req, res) => {
     const { id } = req.params;
 
@@ -177,7 +185,7 @@ const forgotPassword = async (req, res) => {
         }
 
         // Generate a 6-digit random code
-        const resetCode = Math.floor(100000 + Math.random() * 900000).toString(); // Ensures a 6-digit code
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
         // Set expiry time (e.g., 15 minutes from now)
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
@@ -283,6 +291,7 @@ const resetPassword = async (req, res) => {
 };
 
 
+// Verify code function
 const verifyCode = async (req, res) => {
     const { email, code } = req.body;
 
@@ -308,7 +317,7 @@ const verifyCode = async (req, res) => {
 };
 
 
-// New function to check if username or email exists
+// Check if username or email exists
 const checkUserExists = async (req, res) => {
     const { username, email } = req.body;
 
@@ -318,10 +327,8 @@ const checkUserExists = async (req, res) => {
             return res.status(400).json({ message: "Please provide a username or email to check." });
         }
 
-        // Check for existing username in Credential collection
+        // Check for existing username and email in Credential collection
         const existingUsername = username ? await Credential.findOne({ username }) : null;
-        
-        // Check for existing email in Customer collection
         const existingEmail = email ? await Customer.findOne({ email }) : null;
 
         // Prepare response

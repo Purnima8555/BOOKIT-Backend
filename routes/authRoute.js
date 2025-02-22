@@ -16,6 +16,6 @@ router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/verify-code", verifyCode);
-router.post("/check-user-exists", checkUserExists); // New route
+router.post("/check-user-exists", checkUserExists);
 
 module.exports = router;

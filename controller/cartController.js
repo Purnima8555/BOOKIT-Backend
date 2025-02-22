@@ -1,6 +1,7 @@
 const Cart = require("../model/cart");
 const Book = require("../model/book");
 
+
 // Add a book to the cart
 const addToCart = async (req, res) => {
   try {
@@ -56,7 +57,8 @@ const addToCart = async (req, res) => {
   }
 };
 
-// Rest of the controller remains unchanged
+
+// GetbyUser function
 const getCartByUser = async (req, res) => {
   try {
     const { user_id } = req.params;
@@ -91,6 +93,8 @@ const getCartByUser = async (req, res) => {
   }
 };
 
+
+// Update cart function
 const updateCartItem = async (req, res) => {
   try {
     const { id } = req.params;
@@ -133,6 +137,8 @@ const updateCartItem = async (req, res) => {
   }
 };
 
+
+// Remove from cart function
 const removeFromCart = async (req, res) => {
   try {
     const { id } = req.params;
@@ -149,6 +155,8 @@ const removeFromCart = async (req, res) => {
   }
 };
 
+
+// Clear function
 const clearCart = async (req, res) => {
   try {
     const { user_id } = req.params;

@@ -5,6 +5,7 @@ const Book = require("../model/book");
 const Notification = require("../model/notification");
 const mongoose = require("mongoose");
 
+
 // Place an order
 const placeOrder = async (req, res) => {
   try {
@@ -139,6 +140,7 @@ const placeOrder = async (req, res) => {
   }
 };
 
+
 // Get All Orders for a User
 const getOrdersByUser = async (req, res) => {
   try {
@@ -164,6 +166,7 @@ const getOrdersByUser = async (req, res) => {
     res.status(500).json({ message: "Error fetching orders", error: err.message });
   }
 };
+
 
 // Get All Orders (Admin)
 const getAllOrders = async (req, res) => {
@@ -195,6 +198,7 @@ const getAllOrders = async (req, res) => {
     res.status(500).json({ message: "Error fetching all orders", error: err.message });
   }
 };
+
 
 // Update Order Status (and optionally Payment Status)
 const updateOrderStatus = async (req, res) => {
@@ -237,6 +241,7 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+
 // Delete an Order
 const deleteOrder = async (req, res) => {
   try {
@@ -277,9 +282,9 @@ const getOrderTypeCounts = async (req, res) => {
     orders.forEach(order => {
       order.items.forEach(item => {
         if (item.type === "purchase") {
-          purchaseCount += item.quantity; // Sum quantities for purchases
+          purchaseCount += item.quantity;
         } else if (item.type === "rental") {
-          rentCount += item.quantity; // Sum quantities for rentals
+          rentCount += item.quantity;
         }
       });
     });
@@ -310,8 +315,8 @@ const getCurrentlyReading = async (req, res) => {
     const orders = await Order.find({
       user_id,
       status: "Delivered",
-      "items.type": "rental" // Filter for orders containing rental items
-    }).populate("items.book_id", "title price rental_price image"); // Populate book details
+      "items.type": "rental"
+    }).populate("items.book_id", "title price rental_price image");
 
     // Process orders to extract rental books
     let currentlyReading = [];
@@ -350,5 +355,5 @@ module.exports = {
   updateOrderStatus,
   deleteOrder,
   getOrderTypeCounts,
-  getCurrentlyReading // Add new function to exports
+  getCurrentlyReading
 };

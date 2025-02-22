@@ -1,5 +1,6 @@
 const Favorite = require("../model/favorite");
 
+
 // Add a book to favorites
 const addFavorite = async (req, res) => {
   try {
@@ -21,6 +22,7 @@ const addFavorite = async (req, res) => {
   }
 };
 
+
 // Get all favorite books for a user
 const getFavoritesByUser = async (req, res) => {
   try {
@@ -37,6 +39,7 @@ const getFavoritesByUser = async (req, res) => {
     res.status(500).json({ message: "Error fetching favorites", error: err });
   }
 };
+
 
 // Remove a book from favorites
 const removeFavorite = async (req, res) => {

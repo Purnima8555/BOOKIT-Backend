@@ -3,6 +3,8 @@ const Customer = require("../model/customer");
 const Credential = require("../model/credential");
 const nodemailer = require("nodemailer");
 
+
+// FindAll function
 const findAll = async (req,res) => {
     try {
         const customers = await Customer.find();
@@ -12,6 +14,8 @@ const findAll = async (req,res) => {
     }
 }
 
+
+// Save user function
 const save = async (req, res) => {
   const { username, full_name, email, contact_no, address, role, password } = req.body;
 
@@ -39,7 +43,7 @@ const save = async (req, res) => {
     const cred = new Credential({
       username,
       password: hashedPassword,
-      role: role || "User", // Default to "User" if not provided
+      role: role || "User",
     });
     await cred.save();
 
@@ -52,7 +56,7 @@ const save = async (req, res) => {
       contact_no,
       role: role || "User",
       address,
-      image: req.file.filename, // Save image filename like addBook
+      image: req.file.filename,
     });
     await customer.save();
 
@@ -91,6 +95,8 @@ const save = async (req, res) => {
   }
 };
 
+
+// Find By id function
 const findById = async (req,res) => {
     try {
         const customers = await Customer.findById(req.params.id);
@@ -100,6 +106,8 @@ const findById = async (req,res) => {
     }
 }
 
+
+// Delete user function
 const deleteById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -123,6 +131,8 @@ const deleteById = async (req, res) => {
   }
 };
 
+
+// Update info function
 const update = async (req, res) => {
     try {
         const { role, image, ...otherUpdates } = req.body;
@@ -132,8 +142,8 @@ const update = async (req, res) => {
             req.params.id,
             {
                 ...otherUpdates,
-                role: role || "User", // Ensure role defaults to 'User' if not provided
-                image: image || null  // Ensure image is handled properly
+                role: role || "User",
+                image: image || null
             },
             { new: true }
         );
@@ -226,7 +236,7 @@ const getAndUpdate = async (req, res) => {
       contact_no: contact_no || customer.contact_no,
       address: address || customer.address,
       role: role || customer.role,
-      image: req.file ? req.file.filename : customer.image, // Use new filename if uploaded
+      image: req.file ? req.file.filename : customer.image,
     };
 
     // Update Customer document

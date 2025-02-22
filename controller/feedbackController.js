@@ -2,6 +2,7 @@ const Customer = require("../model/customer");
 const Feedback = require("../model/feedback");
 const mongoose = require("mongoose");
 
+
 // Add Feedback for a Book
 const addFeedback = async (req, res) => {
   try {
@@ -30,6 +31,7 @@ const addFeedback = async (req, res) => {
   }
 };
 
+
 // Get All Feedback
 const getAllFeedback = async (req, res) => {
   try {
@@ -44,6 +46,7 @@ const getAllFeedback = async (req, res) => {
     res.status(500).json({ message: "Error fetching all feedback", error: err.message });
   }
 };
+
 
 // Get Feedback by Book ID
 const getFeedbackByBookId = async (req, res) => {
@@ -61,6 +64,7 @@ const getFeedbackByBookId = async (req, res) => {
     res.status(500).json({ message: "Error fetching feedback by book ID", error: err.message });
   }
 };
+
 
 // Update Feedback
 const updateFeedback = async (req, res) => {
@@ -88,6 +92,7 @@ const updateFeedback = async (req, res) => {
   }
 };
 
+
 // Delete Feedback
 const deleteFeedback = async (req, res) => {
   try {
@@ -106,6 +111,7 @@ const deleteFeedback = async (req, res) => {
   }
 };
 
+
 // Get Average Rating for a Book
 const getAverageRating = async (req, res) => {
   try {
@@ -121,7 +127,7 @@ const getAverageRating = async (req, res) => {
         $group: {
           _id: "$book_id",
           averageRating: { $avg: "$rating" },
-          totalReviews: { $sum: 1 }, // Optional: count reviews
+          totalReviews: { $sum: 1 },
         },
       },
     ]);
