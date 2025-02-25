@@ -1,3 +1,4 @@
+// app.js
 const express = require("express");
 const path = require("path");
 const connectDb = require("./config/db");
@@ -39,8 +40,4 @@ app.use("/api/book-request", bookRequestRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/profilePicture", express.static("public/profilePicture"));
 
-
-const port = 3000;
-app.listen(port, () => {
-console.log(`Server running at http://localhost:${port}`);
-});
+module.exports = app;
