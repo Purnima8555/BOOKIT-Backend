@@ -50,25 +50,22 @@ const addBook = async (req, res) => {
   } = req.body;
 
   try {
-    // Parse genre if it's a string (i.e., it looks like a JSON array string)
     let parsedGenre = [];
     if (typeof genre === 'string') {
       try {
-        parsedGenre = JSON.parse(genre); // Parse string into an array
+        parsedGenre = JSON.parse(genre);
       } catch (e) {
         return res.status(400).json({ message: "Invalid genre format. Expected an array." });
       }
     } else {
-      parsedGenre = genre; // If it's already an array, use it directly
+      parsedGenre = genre;
     }
 
-    // Check if the ISBN already exists in the database
     const existingBook = await Book.findOne({ ISBN });
     if (existingBook) {
       return res.status(400).json({ message: "ISBN already exists" });
     }
 
-    // Check if an image file is provided
     if (!req.file) {
       return res.status(400).json({ message: "Image file is required" });
     }
