@@ -49,10 +49,10 @@ const placeOrder = async (req, res) => {
     }
 
     const calculatedTotal = calculatedSubtotal + (deliveryFee || 0);
-    if (calculatedTotal !== total) {
-      return res.status(400).json({ message: "Total mismatch. Possible tampering detected." });
-    }
-
+    if (Math.round(calculatedTotal * 100) / 100 !== Math.round(total * 100) / 100) {
+      console.log(`Calculated Total: ${calculatedTotal}, Sent Total: ${total}`);
+    return res.status(400).json({ message: "Total mismatch. Possible tampering detected." });
+  }
     const newOrder = new Order({
       user_id,
       items,
@@ -129,10 +129,20 @@ const placeOrder = async (req, res) => {
     }
 
     res.status(201).json({
-      message: "Order placed successfully",
-      order_id: newOrder._id,
-      status: newOrder.status,
+      _id: newOrder._id,
+      user_id: newOrder.user_id,
+      items: newOrder.items.map(item => ({
+        book_id: item.book_id,
+        quantity: item.quantity,
+        type: item.type,
+        rentalDays: item.rentalDays,
+      })),
+      deliveryFee: newOrder.deliveryFee,
+      total: newOrder.total_price,
+      paymentMethod: newOrder.paymentMethod,
       paymentStatus: newOrder.paymentStatus,
+      status: newOrder.status || "Pending",
+      order_date: newOrder.createdAt || new Date(),
     });
   } catch (err) {
     console.error("Error in placeOrder:", err);
@@ -153,6 +163,7 @@ const getOrdersByUser = async (req, res) => {
     // Return empty array if no orders exist, not an error
     res.status(200).json(orders.length > 0 ? orders.map(order => ({
       id: order._id,
+      user_id: order.user_id,
       items: order.items,
       deliveryFee: order.deliveryFee,
       total_price: order.total_price,

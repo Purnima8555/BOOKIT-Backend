@@ -37,7 +37,13 @@ const addToCart = async (req, res) => {
       existingCartItem.type = type;
       existingCartItem.rentalDays = type === "rental" ? rentalDays : undefined;
       await existingCartItem.save();
-      return res.status(200).json({ message: "Cart updated successfully", cart: existingCartItem });
+
+      // Populate the book details before sending the response
+      const updatedCartItem = await Cart.findById(existingCartItem._id).populate('book_id');
+      return res.status(200).json({
+        message: "Cart updated successfully",
+        cart: updatedCartItem,
+      });
     }
 
     // Add a new cart item
@@ -50,7 +56,14 @@ const addToCart = async (req, res) => {
     });
 
     await newCartItem.save();
-    res.status(201).json({ message: "Book added to cart", cart: newCartItem });
+
+    // Populate the book details before sending the response
+    const populatedCartItem = await Cart.findById(newCartItem._id).populate('book_id');
+
+    res.status(201).json({
+      message: "Book added to cart",
+      cart: populatedCartItem,
+    });
   } catch (err) {
     console.error("Error adding to cart:", err);
     res.status(500).json({ message: "Error adding to cart", error: err.message });

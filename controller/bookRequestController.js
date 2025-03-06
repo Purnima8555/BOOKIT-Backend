@@ -47,7 +47,7 @@ const submitBookRequest = async (req, res) => {
 
     const adminNotifications = admins.map((admin) => new Notification({
       userId: admin._id,
-      message: `New book request awaiting approval: "${title}" by ${author} (User: ${user.full_name || user.username}, Request ID: ${bookRequest._id.toString()})`,
+      message: `New book request awaiting approval: "${title}" by ${author} (User: ${user.full_name || user.username})`,
       type: "warning",
       relatedId: bookRequest._id,
     }));
@@ -134,7 +134,7 @@ const updateBookRequest = async (req, res) => {
     } else {
       const userNotification = new Notification({
         userId: bookRequest.userId,
-        message: `Your request for "${bookRequest.title}" by ${bookRequest.author} has been ${status}. Request ID: ${bookRequest._id.toString()}`,
+        message: `Your request for "${bookRequest.title}" by ${bookRequest.author} has been ${status}`,
         type: status === "approved" || status === "fulfilled" ? "success" : "error",
         relatedId: bookRequest._id,
       });
