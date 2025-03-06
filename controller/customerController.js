@@ -212,13 +212,13 @@ const getAndUpdate = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // If no updates provided (no body and no file), just return the customer data
-    if ((!updates || Object.keys(updates).length === 0) && !req.file) {
+    // If no updates provided, just return the customer data
+    if (!updates || Object.keys(updates).length === 0) {
       return res.status(200).json(customer);
     }
 
     // Validate and handle updates
-    const { username, full_name, email, contact_no, address, role } = updates;
+    const { username, full_name, email, contact_no, address, role, image } = updates;
 
     // Check if username is being updated and already exists
     if (username && username !== customer.username) {
@@ -236,7 +236,7 @@ const getAndUpdate = async (req, res) => {
       contact_no: contact_no || customer.contact_no,
       address: address || customer.address,
       role: role || customer.role,
-      image: req.file ? req.file.filename : customer.image,
+      image: image || customer.image,
     };
 
     // Update Customer document
@@ -285,15 +285,16 @@ const getAndUpdate = async (req, res) => {
             <li><strong>Contact Number:</strong> ${updatedCustomer.contact_no}</li>
             <li><strong>Address:</strong> ${updatedCustomer.address}</li>
             <li><strong>Role:</strong> ${updatedCustomer.role}</li>
+            ${updatedCustomer.image ? `<li><strong>Profile Image:</strong> ${updatedCustomer.image}</li>` : ''}
           </ul>
           <p>If you did not request these changes, please contact our support team immediately.</p>
         `,
       });
     } catch (emailError) {
       console.error("Error sending email:", emailError);
-      // Continue with response even if email fails
     }
 
+    console.log('Updated customer:', updatedCustomer);
     res.status(200).json({
       message: "Customer details retrieved and updated successfully",
       customer: updatedCustomer,
@@ -303,7 +304,7 @@ const getAndUpdate = async (req, res) => {
     console.error("Error in getAndUpdate customer:", error);
     res.status(500).json({ message: "Error in getAndUpdate customer", error: error.message });
   }
-};
+}
 
 
 // New: Get total customer count

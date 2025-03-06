@@ -14,7 +14,7 @@ const { authenticateToken } = require("../security/authorization");
 router.get("/", getAllFeedback);
 router.get("/book/:book_id", getFeedbackByBookId);
 router.get("/average-rating/:book_id", getAverageRating);
-router.post("/", authenticateToken, addFeedback);
+router.post("/", addFeedback);
 router.patch("/:id", updateFeedback);
 router.delete("/:id", deleteFeedback);
 

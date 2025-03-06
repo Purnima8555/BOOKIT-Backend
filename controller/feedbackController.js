@@ -21,9 +21,27 @@ const addFeedback = async (req, res) => {
 
     await newFeedback.save();
 
+    // Fetch username and image from Customer
+    const user = await Customer.findById(user_id).select("username image");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Construct response matching getFeedbackByBookId structure
+    const feedbackResponse = {
+      _id: newFeedback._id,
+      user_id: newFeedback.user_id,
+      book_id: newFeedback.book_id,
+      rating: newFeedback.rating,
+      comment: newFeedback.comment,
+      date: newFeedback.date,
+      __v: newFeedback.__v,
+      username: user.username
+    };
+
     res.status(201).json({
       message: "Feedback added successfully",
-      feedback: newFeedback,
+      feedback: feedbackResponse,
     });
   } catch (err) {
     console.error("Error adding feedback:", err);
@@ -53,12 +71,27 @@ const getFeedbackByBookId = async (req, res) => {
   try {
     const { book_id } = req.params;
 
-    const feedbackList = await Feedback.find({ book_id })
-      .populate("user_id", "username image") // Fixed typo: removed comma before image
-      .sort({ date: -1 });
+    const feedbackList = await Feedback.find({ book_id }).sort({ date: -1 });
 
-    // Return empty array if no feedback exists, not an error
-    res.status(200).json(feedbackList.length > 0 ? feedbackList : []);
+    // Transform feedback to include username as a separate field
+    const populatedFeedback = await Promise.all(
+      feedbackList.map(async (feedback) => {
+        const user = await Customer.findById(feedback.user_id).select("username image");
+        return {
+          _id: feedback._id,
+          user_id: feedback.user_id,
+          book_id: feedback.book_id,
+          rating: feedback.rating,
+          comment: feedback.comment,
+          date: feedback.date,
+          __v: feedback.__v,
+          username: user ? user.username : "Unknown",
+          image: user ? user.image : null,
+        };
+      })
+    );
+
+    res.status(200).json(populatedFeedback.length > 0 ? populatedFeedback : []);
   } catch (err) {
     console.error("Error fetching feedback by book ID:", err);
     res.status(500).json({ message: "Error fetching feedback by book ID", error: err.message });
